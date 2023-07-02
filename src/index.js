@@ -1,24 +1,28 @@
-const express = require('express');
-const path = require('path');
-const exphbs = require('express-handlebars');
+const express = require("express");
+const app = express();
+const port = process.env.PORT || 3000;
+const { engine } = require('express-handlebars'); //para esta versión de node es necesario importar los handlebars de esta manera
 const methodOverride = require('method-override');
 const session = require('express-session');
 
+
 //inicializaciones
-const app = express();
+require('./database');
 
-//seccion de configuracion
-app.set('port', process.env.port || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.engine('.hbs', exphbs({
-    defaultLayout:'main',
-    layoutsDir: path.join(app.get('views'), 'layouts'),
-    partialsDir:path.join(app.get('views'), 'partials'),
-    extname:'.hbs'
-}));
-app.set('view engine', '.hbs');
+app.engine('handlebars', engine());
 
-//seccion middleware
+
+//sección de configuracion
+// Motor de plantilla
+const hbs = require('hbs');
+hbs.registerPartials(__dirname + '/views/partials', function (err) {});
+app.set('view engine', 'hbs');
+app.set("views", __dirname + "/views");
+
+//archivos estaticos
+app.use(express.static(__dirname + "/public"));
+
+//sección middleware
 app.use(express.urlencoded({extended:false}));
 app.use(methodOverride('_method'));
 app.use(session({
@@ -29,17 +33,16 @@ app.use(session({
 //Todo lo anterior nos permitira poder autenticar al usuario
 
 
-//seccion de variables globales
+//sección de variables globales
 
 
-//seccion de rutas
+//sección de rutas
+app.use(require('./routes/index'));
+app.use(require('./routes/notes'));
+app.use(require('./routes/users'));
 
+//iniciar el servidor
 
-//seccion de archivos estaticos
-
-
-//seccion de escucha del servidor}
-
-app.listen(app.get('port'), () => {
-    console.log('servidor escuchando en el puerto:', app.get('port'));
+app.listen(port, () => {
+    console.log(`servidor escuchando en el puerto: http://localhost:${port}`);
 });
